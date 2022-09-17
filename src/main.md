@@ -10,16 +10,20 @@ This is the main file. It has 2 major parts : graph representation, utility func
   - the second parameter must be an object of options related to the algorithm
   - the third parameter can be any additional input to the algorithm. For e.g: rootNodeId etc... 
   - it is recommended to not have more than 3 parameters of a Graph algorithm function  
+- use `edge` for edge , `vertex` vertex/node in the graph.  
+
 
 The programming approach here is more functional than object oriented. Each function is independent and designed most of the time to do a single task.
 
 # The overall workflow
 
+```
 data(json) --> [Loader] --> GraphData 
 
 GraphData --> [GraphAlgorithm] --> output
                              
 GraphData --> [UtilityFunction] --> output / modified GraphData
+```
 
 - the `loader` takes in data in json and generates the graph in the project format (referred to as `GraphData`)
 - Once GraphData is generated, it can be used in `GraphAlgorithms`. GraphData is dynamic and can be mainpulated by `UtilityFunctions`. 
