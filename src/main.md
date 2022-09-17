@@ -112,5 +112,34 @@ This is the task of the loader, the very first method of the system. The loader 
 It can either create a blank graph or initialize the graph with some data. 
 The data can either be another GraphData object or raw data that requires some processing 
 
+# Utility functions 
+
+Generating the graph was just the first step. The next step is to manipulate, analyze the graph. We need to define some basic operations on the graph. These are performed by utility functions. 
+
+**Conventions**
+- name starts with lower case; camelCase, no symbols, no abbreviations, use full name; 
+- special stating words : `add` , `delete`, `print`, `get` 
+
+## Basic operations
+
+### addVertex
+
+### addEdge
+
+### deleteVertex
+
+### deleteEdge
+
+
+## Other useful utility function
+
+### printGraphType 
+  
+### getGraphMetadata
+
+### getVertexDegree
+
+### getEdgeWeight
+
 
 
