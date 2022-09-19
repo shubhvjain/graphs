@@ -1,3 +1,11 @@
 ```js
-module.exports = {createGraph,addVertex,addEdge,BreadthFirstSearch }
+module.exports = {
+  createGraph,
+  addVertex,addEdge,
+  getVertexNeighbours,
+  getVertexDegree,
+
+  BreadthFirstSearch,
+
+}
 ```

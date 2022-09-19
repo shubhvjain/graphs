@@ -29,7 +29,6 @@ console.log(options)
 
 
 const addVertex = (graphData,options) =>{
-
   if(!options.id){
     if(!graphData.options.addBlankVertex){
       throw new Error ("No vertex id provided")
@@ -37,44 +36,38 @@ const addVertex = (graphData,options) =>{
       options.id = Math.floor(Math.random() * (50000) +1)
     }
   }
-
-  if(!graphData.vertices[options.id]){
-    graphData.vertices[options.id] = {
-      label: options.label || graphData.options.defaultNewVertexLabel,
-      weight: options.weight || graphData.options.defaultNewEdgeWeight,
-      data: options.data || {},
-      metadata: {
-        degree: 0
-      },
-      temp:{
-
-      }
-    }
-    return graphData
-  }else{
+  if(graphData.vertices[options.id]){
     throw new Error("Vertex with same id already exists in the graph.")
   }
+  graphData.vertices[options.id] = {
+    label: options.label || graphData.options.defaultNewVertexLabel,
+    weight: 'weight' in options ? options.weight : graphData.options.defaultNewVertexWeight,
+    data: options.data,
+    temp:{}
+  }
+  return graphData
+  
 }
 
 
 const addEdge = (graphData,options)=>{
 
-  if(!options.node1){throw new Error("Node 1 not provided")}
-  if(!options.node2){throw new Error("Node 2 not provided")}
+  if(!options.v1){throw new Error("Vertex 1 not provided")}
+  if(!options.v2){throw new Error("Vertex 2 not provided")}
   
-  if(!graphData.vertices[options.node1]){throw new Error(`Node 1 (${options.node1}) does not exists in the graph`)}
-  if(!graphData.vertices[options.node2]){throw new Error(`Node 2 (${options.node2})  does not exists in the graph`)}
+  if(!graphData.vertices[options.v1]){throw new Error(`Vertex 1 (${options.v1}) does not exists in the graph`)}
+  if(!graphData.vertices[options.v2]){throw new Error(`Vertex 2 (${options.v2})  does not exists in the graph`)}
 
-  const node1node2Search = graphData.edges.find(edge=>{return edge.node1 == options.node1 &&  edge.node2 == options.node2})
-  const node2node1Search = graphData.edges.find(edge=>{return edge.node1 == options.node2 &&  edge.node2 == options.node1}) 
+  const node1node2Search = graphData.edges.find(edge=>{return edge.v1 == options.v1 &&  edge.v2 == options.v2})
+  const node2node1Search = graphData.edges.find(edge=>{return edge.v1 == options.v2 &&  edge.v2 == options.v1}) 
 
   if(graphData.metadata.isSimple){
-    if(node1node2Search || node2node1Search ){ throw new Error(`Edge ${options.node1}--${options.node2} already exists in the simple graph`)}
+    if(node1node2Search || node2node1Search ){ throw new Error(`Edge ${options.v1}--${options.v2} already exists in the simple graph`)}
   }
 
   let newEdge = {
-    node1: options.node1,
-    node2: options.node2, 
+    v1: options.v1,
+    v2: options.v2, 
     weight:options.weight|| graphData.options.defaultNewEdgeWeight,
     label:options.label || graphData.options.defaultNewEdgeLabel,
     temp:{}
@@ -87,36 +80,77 @@ const addEdge = (graphData,options)=>{
 }
 
 
+const getVertexNeighbours = (graphData,vertexId)=>{
+  if(!vertexId){throw new Error("No Vertex Id not provided")}
+  if(!graphData.vertices[vertexId]){throw new Error("Vertex not found in the graph")}
 
-const BreadthFirstSearch = (graphData,sourceNodeId)=>{
-  if(!graphData.vertices[sourceNodeId]){throw new Error("Source node not found")}
+  const node1Search = graphData.edges.filter(edge=>edge.v1 == vertexId)
+  const node2Search = graphData.edges.filter(edge=>edge.v2 == vertexId) 
 
-  graphData.vertices[sourceNodeId].temp = {
-    visited: true,
-    distance :0,
-    predecessor: null
-  }
+  let neighbours = { in:[], out:[], all:[]}
 
-  // let theTree = createGraph({title:`BFS tree starting with node ${sourceNodeId}`})
-
-  let queue = []
-  queue.push(sourceNodeId)
-
-  while(queue.length > 0){
-      const aNode =  queue.shift()
-      const lastDistance = graphData.vertices[aNode]['temp']['distance']
-      const sourceNeighbours = getVertexNeighbours(graphData,aNode)
-      sourceNeighbours.vertices.map(neighbour=>{
-        graphData.vertices[neighbour]['temp'] = {
-          visited: true,
-          distance: 1
-        }
-      })
-  }
-
-
+  node1Search.map(edge2=>{ 
+    if(neighbours.all.indexOf(edge2.v2)==-1){   
+      neighbours.all.push(edge2.v2)
+      neighbours.out.push(edge2.v2)
+    }
+  })
+  node2Search.map(edge1=>{ 
+    if(neighbours.all.indexOf(edge1.v1)==-1){   
+      neighbours.all.push(edge1.v1)
+      neighbours.in.push(edge1.v1)
+    }
+  })
+  return neighbours
 }
 
 
+const getVertexDegree = (graphData,vertexId)=>{
+  const neighbours = getVertexNeighbours(graphData,vertexId)
+  return {
+    all: neighbours.all.length,
+    in: neighbours.in.length,
+    out: neighbours.out.length
+  }
+}
 
-module.exports = {createGraph,addVertex,addEdge,BreadthFirstSearch }
+
+const BreadthFirstSearch = (graphData,sourceVertexId)=>{
+  if(!graphData.vertices[sourceVertexId]){throw new Error("Source vertex not found")}
+  
+  let graphCopy = JSON.parse(JSON.stringify(graphData))
+  graphCopy.vertices[sourceVertexId].temp = {visited: true}
+
+  let theTree = createGraph({title:`BFS tree starting with node ${sourceVertexId}`})
+  theTree = addVertex(theTree,{id:sourceVertexId,weight:0})
+
+  let queue = []
+  queue.push(sourceVertexId)
+  
+  while(queue.length > 0){
+      const aNode =  queue.shift()
+      const sourceNeighbours = getVertexNeighbours(graphCopy,aNode)
+      sourceNeighbours.all.map(neighbour=>{
+        const alreadyVisited = 'visited'  in  graphCopy.vertices[neighbour]['temp']
+        if(!alreadyVisited){
+          queue.push(neighbour)
+          predcessorWeight = theTree.vertices[aNode]['weight']
+          theTree = addVertex(theTree,{id:neighbour,weight:predcessorWeight+1})
+          theTree = addEdge(theTree,{v1:aNode,v2:neighbour})
+          graphCopy.vertices[neighbour]['temp']['visited'] = true
+        }
+      })
+  }
+  return theTree
+}
+
+
+module.exports = {
+  createGraph,
+  addVertex,addEdge,
+  getVertexNeighbours,
+  getVertexDegree,
+
+  BreadthFirstSearch,
+
+}
