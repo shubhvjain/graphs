@@ -14,64 +14,64 @@ saving a file in the given path
 
 **/
 
-const fs = require('fs/promises')
+const fs = require("fs/promises");
 
-const getCodeBlocks = (data)=>{
- const blocks = data.match(/`{3}([\w]*)\n([\S\s]+?)\n`{3}/gm)
- return blocks || []
-}  
+const getCodeBlocks = (data) => {
+  const blocks = data.match(/`{3}([\w]*)\n([\S\s]+?)\n`{3}/gm);
+  return blocks || [];
+};
 
-const parseCodeBlockString = (block) =>{
- if(!block) {throw new Error("Block empty")}
- const b1 = block.replaceAll("```","")
- const st2 = b1.substring(0,1) 
- let b2 = b1
- let filter = 'none'
- if(st2!='\n'){
-   const parts = b2.split('\n')
-   filter = parts[0] 
-   b2 = b2.replace(filter,'')
- }
- return {filter: filter,code: b2}
-}
+const parseCodeBlockString = (block) => {
+  if (!block) {
+    throw new Error("Block empty");
+  }
+  const b1 = block.replaceAll("```", "");
+  const st2 = b1.substring(0, 1);
+  let b2 = b1;
+  let filter = "none";
+  if (st2 != "\n") {
+    const parts = b2.split("\n");
+    filter = parts[0];
+    b2 = b2.replace(filter, "");
+  }
+  return { filter: filter, code: b2 };
+};
 
+const mdToCode = (blockStrings, options = { filter: "none" }) => {
+  let blocks = [];
+  blockStrings.map((block) => {
+    const rawCodeBlocks = getCodeBlocks(block);
+    rawCodeBlocks.map((rBlock) => {
+      blocks.push(parseCodeBlockString(rBlock));
+    });
+  });
+  let filteredBlock = blocks.filter((blk) => blk["filter"] == options.filter);
+  let blkStrings = filteredBlock.map((blk) => blk["code"]);
+  return blkStrings.join("\n");
+};
 
-const mdToCode = (blockStrings,options={filter:'none'})=>{
-  let blocks = []
-  blockStrings.map(block =>{
-    const rawCodeBlocks = getCodeBlocks(block)
-    rawCodeBlocks.map(rBlock =>{
-	blocks.push(  parseCodeBlockString(rBlock) )
-    })
-  }) 
-  let filteredBlock = blocks.filter(blk=>blk['filter']==options.filter)
-  let blkStrings = filteredBlock.map(blk=>blk['code']) 
-  return blkStrings.join("\n")  
-}
+const readMDFile = async (fileName) => {
+  //by default files are read from the src folder.
+  const data = await fs.readFile("./src/" + fileName, { encoding: "utf8" });
+  return data;
+};
 
-const readMDFile =  async (fileName)=>{
-//by default files are read from the src folder.
-  const data = await fs.readFile('./src/'+fileName,{encoding:'utf8'})
-  return data
-}
-
-const saveToFile = async (fileName,fileContent,folder)=>{
-  // by default files will be saved in the dist folder 
+const saveToFile = async (fileName, fileContent, folder) => {
+  // by default files will be saved in the dist folder
   await fs.writeFile(`./${folder}/${fileName}`, fileContent);
-}
+};
 
-const main = async (options)=>{
-// options :  { input, filter, output, outputFolder }
+const main = async (options) => {
+  // options :  { input, filter, output, outputFolder }
+  const files = []
+  const fileNames = options.input.split(",")
+  for(let i=0; i<fileNames.length;i++){
+    const fileContent = await readMDFile(fileNames[i]);
+    console.log(fileContent.length)
+    files.push(fileContent)
+  }
+  const codeFile = mdToCode(files, { filter: options.filter });
+  await saveToFile(options.output, codeFile, options.outputFolder);
+};
 
-const fileContent = await readMDFile(options.input) 
-console.log(fileContent)
-console.log(typeof fileContent)
-const codeFile = mdToCode([fileContent])
-await saveToFile(options.output,codeFile,options.outputFolder)
-
-
-}
-
-
-module.exports = {mdToCode,readMDFile,main}
-
+module.exports = { mdToCode, readMDFile, main };
