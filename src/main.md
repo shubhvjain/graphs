@@ -63,7 +63,7 @@ a = {   "1,1": 1 , "1,2":2 , "1,3":3 ,
 ```
 Adding a new edge is easy now. But this is not of much use as further processing of graphs require searching for individual vertices connected by an edge. For e.g. to find degree of a vertex, we would require to search for a regular expression in the array of key hash which is an additional step. 
 
-Another ways it to change the 2 dimensional array into a 1 dimensional array. This can be done by by representing edge as an object with 2 main fields: node1, node2 (and some additional fields)
+Another ways it to change the 2 dimensional array into a 1 dimensional array. This can be done by by representing edge as an object with 2 main fields: v1, v2 (and some additional fields)
 
 So far our representation only overs edges in the graph. But a graph has more parameters 
 
@@ -88,14 +88,14 @@ GraphData contains following fields:
   - value : data related to the vertex. this can include fields like :
     - `label` (default: id), 
     - `weight` (if vertices need to have weights, 0 by default)
-    - `data` (default:{}) any additional data related to the node 
+    - `data` (default:{}) any additional data related to the vertex 
     - `metadata`:
       - `degree`
 - `edges` : the modified adjacenct matrix  object. An array of object. Each object consists of  :
   - `edge`: this is the acutal value of the adjacency matrix i.e. a_{i,j}. If the graph is a simple graph this will be 1/0. For multigraph this contains the number of edges between i,j. 
-  - a edge connects 2 nodes
-  - `node1`: id of node 1
-  - `node2`: id of node 2
+  - a edge connects 2 vertex
+  - `v1`: id of vertex 1
+  - `v2`: id of vertex 2
   - `weight`: the weight of the edge. (default:0),
   - `label`: label for the edge 
   - `edgeId`: a unique id is assigned to each edge to make modifications easier (defualt: auto incremented) 
@@ -116,7 +116,7 @@ GraphData contains following fields:
 ## How to generate GraphData object ? 
 
 This is the task of the loader, the very first method of the system. The loader generates a GraphData. 
-It create an empty graph. Node and edges can be added to it in bullk using utility functions. The method  takes options realted to graph metadata or other settings.
+It create an empty graph. Vertices and edges can be added to it in bullk using utility functions. The method  takes options realted to graph metadata or other settings.
 
 
 
@@ -172,7 +172,6 @@ Steps:
 
 ```js
 const addVertex = (graphData,options) =>{
-
   if(!options.id){
     if(!graphData.options.addBlankVertex){
       throw new Error ("No vertex id provided")
@@ -180,30 +179,24 @@ const addVertex = (graphData,options) =>{
       options.id = Math.floor(Math.random() * (50000) +1)
     }
   }
-
-  if(!graphData.vertices[options.id]){
-    graphData.vertices[options.id] = {
-      label: options.label || graphData.options.defaultNewVertexLabel,
-      weight: options.weight || graphData.options.defaultNewEdgeWeight,
-      data: options.data || {},
-      metadata: {
-        degree: 0
-      },
-      temp:{
-
-      }
-    }
-    return graphData
-  }else{
+  if(graphData.vertices[options.id]){
     throw new Error("Vertex with same id already exists in the graph.")
   }
+  graphData.vertices[options.id] = {
+    label: options.label || graphData.options.defaultNewVertexLabel,
+    weight: 'weight' in options ? options.weight : graphData.options.defaultNewVertexWeight,
+    data: options.data,
+    temp:{}
+  }
+  return graphData
+  
 }
 ```
 
 ### addEdge
 This is tricky! Depends on the structure of the graph or the metadata flags: `hasLoops`, `hasDirectedEdges`, `isSimple` 
 
-Inputs : `options` { `node1` (required), `node2` (required), `label` ,`weight` }
+Inputs : `options` { `v1` (required), `v2` (required), `label` ,`weight` }
 
 `isSimple`:
 - `true` : there can be a single edge between any 2 pair of nodes 
@@ -213,7 +206,7 @@ Inputs : `options` { `node1` (required), `node2` (required), `label` ,`weight` }
 - `true`: node1 = node2 is possilbe
 - `false`: node1 == node2 not allowed 
 
-`hasDirectedEdges`: determines if we need to treat (node1,node2) and (node2,node2) different 
+`hasDirectedEdges`: determines if we need to treat (v1,v2) and (v2,v1) different 
 
 
 Steps:
@@ -222,22 +215,22 @@ Steps:
 ```js
 const addEdge = (graphData,options)=>{
 
-  if(!options.node1){throw new Error("Node 1 not provided")}
-  if(!options.node2){throw new Error("Node 2 not provided")}
+  if(!options.v1){throw new Error("Vertex 1 not provided")}
+  if(!options.v2){throw new Error("Vertex 2 not provided")}
   
-  if(!graphData.vertices[options.node1]){throw new Error(`Node 1 (${options.node1}) does not exists in the graph`)}
-  if(!graphData.vertices[options.node2]){throw new Error(`Node 2 (${options.node2})  does not exists in the graph`)}
+  if(!graphData.vertices[options.v1]){throw new Error(`Vertex 1 (${options.v1}) does not exists in the graph`)}
+  if(!graphData.vertices[options.v2]){throw new Error(`Vertex 2 (${options.v2})  does not exists in the graph`)}
 
-  const node1node2Search = graphData.edges.find(edge=>{return edge.node1 == options.node1 &&  edge.node2 == options.node2})
-  const node2node1Search = graphData.edges.find(edge=>{return edge.node1 == options.node2 &&  edge.node2 == options.node1}) 
+  const node1node2Search = graphData.edges.find(edge=>{return edge.v1 == options.v1 &&  edge.v2 == options.v2})
+  const node2node1Search = graphData.edges.find(edge=>{return edge.v1 == options.v2 &&  edge.v2 == options.v1}) 
 
   if(graphData.metadata.isSimple){
-    if(node1node2Search || node2node1Search ){ throw new Error(`Edge ${options.node1}--${options.node2} already exists in the simple graph`)}
+    if(node1node2Search || node2node1Search ){ throw new Error(`Edge ${options.v1}--${options.v2} already exists in the simple graph`)}
   }
 
   let newEdge = {
-    node1: options.node1,
-    node2: options.node2, 
+    v1: options.v1,
+    v2: options.v2, 
     weight:options.weight|| graphData.options.defaultNewEdgeWeight,
     label:options.label || graphData.options.defaultNewEdgeLabel,
     temp:{}
@@ -249,57 +242,59 @@ const addEdge = (graphData,options)=>{
 
 }
 ```
+### getVertexNeighbours
+
+Input: `vertexId`
+
+TODO : Check later if this works for both simple and multigraph ; directed and undirected graph 
+
+```js
+const getVertexNeighbours = (graphData,vertexId)=>{
+  if(!vertexId){throw new Error("No Vertex Id not provided")}
+  if(!graphData.vertices[vertexId]){throw new Error("Vertex not found in the graph")}
+
+  const node1Search = graphData.edges.filter(edge=>edge.v1 == vertexId)
+  const node2Search = graphData.edges.filter(edge=>edge.v2 == vertexId) 
+
+  let neighbours = { in:[], out:[], all:[]}
+
+  node1Search.map(edge2=>{ 
+    if(neighbours.all.indexOf(edge2.v2)==-1){   
+      neighbours.all.push(edge2.v2)
+      neighbours.out.push(edge2.v2)
+    }
+  })
+  node2Search.map(edge1=>{ 
+    if(neighbours.all.indexOf(edge1.v1)==-1){   
+      neighbours.all.push(edge1.v1)
+      neighbours.in.push(edge1.v1)
+    }
+  })
+  return neighbours
+}
+```
+
+### getVertexDegree
+
+This is easy since we can now get a list of neightbours of a vertex.
+
+```js
+const getVertexDegree = (graphData,vertexId)=>{
+  const neighbours = getVertexNeighbours(graphData,vertexId)
+  return {
+    all: neighbours.all.length,
+    in: neighbours.in.length,
+    out: neighbours.out.length
+  }
+}
+```
 
 ### deleteVertex
 
 ### deleteEdge
 
-
-## Other useful utility function
-
 ### printGraphType 
   
 ### getGraphMetadata
 
-### getVertexDegree
-
 ### getEdgeWeight
-
-### getVertexNeighbours
-
-TODO : check later if this works for both simple and multigraph.
-
-```js
-const getVertexNeighbours = (graphData,nodeId)=>{
-  if(!nodeId){throw new Error("No Node Id not provided")}
-  if(!graphData.vertices[nodeId]){throw new Error("Node not found in the graph")}
-
-  let neighbours = []
-  const node1Search = graphData.edges.filter(edge=>return edge.node1 == nodeId)
-  const node2Search = graphData.edges.filter(edge=>return edge.node1 == nodeId) 
-
-  let neighbours = {
-    in:[],
-    out:[],
-    all:[]
-  }
-  node1Search.map(edge2=>{ 
-    if(neighbours.all.indexOf(edge2.node2)==-1){   
-      neighbours.all.push(edge2.node2)
-      neighbours.out.push(edge2.node2)
-    }
-  })
-  node2Search.map(edge1=>{ 
-    if(neighbours.all.indexOf(edge1.node1)==-1){   
-      neighbours.all.push(edge1.node1)
-      neighbours.in.push(edge1.node1)
-    }
-  })
-
-}
-
-
-```
-
-
-
