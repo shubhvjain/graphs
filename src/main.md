@@ -61,7 +61,9 @@ a = {   "1,1": 1 , "1,2":2 , "1,3":3 ,
         "3,1":7  , "3,2":8 , "3,3":9
      }
 ```
-Adding a new edge is easy now.
+Adding a new edge is easy now. But this is not of much use as further processing of graphs require searching for individual vertices connected by an edge. For e.g. to find degree of a vertex, we would require to search for a regular expression in the array of key hash which is an additional step. 
+
+Another ways it to change the 2 dimensional array into a 1 dimensional array. This can be done by by representing edge as an object with 2 main fields: node1, node2 (and some additional fields)
 
 So far our representation only overs edges in the graph. But a graph has more parameters 
 
@@ -87,14 +89,16 @@ GraphData contains following fields:
     - `label` (default: id), 
     - `weight` (if vertices need to have weights, 0 by default)
     - `data` (default:{}) any additional data related to the node 
-- `edgesAM` : the modified adjacenct matrix  object.
-  - key : hash of the index of adjacency matrix (i,j) in the format : "i,j" 
-  - what are i and j: vertex identity. each vertex has a unique id
-  - value: this is an object. it contains:
-    - `edge`: this is the acutal value of the adjacency matrix i.e. a_{i,j}. If the graph is a simple graph this will be 1/0. For multigraph this contains the number of edges between i,j. 
-    - `weight`: the weight of the edge. (default:0),
-    - `label`: label for the edge 
-    - `edgeId`: a unique id is assigned to each edge to make modifications easier (defualt: auto incremented) 
+    - `metadata`:
+      - `degree`
+- `edges` : the modified adjacenct matrix  object. An array of object. Each object consists of  :
+  - `edge`: this is the acutal value of the adjacency matrix i.e. a_{i,j}. If the graph is a simple graph this will be 1/0. For multigraph this contains the number of edges between i,j. 
+  - a edge connects 2 nodes
+  - `node1`: id of node 1
+  - `node2`: id of node 2
+  - `weight`: the weight of the edge. (default:0),
+  - `label`: label for the edge 
+  - `edgeId`: a unique id is assigned to each edge to make modifications easier (defualt: auto incremented) 
 - `metadata`: object, this contains important properties that define the structue of the graph.
   - `title` : the title of the graph 
   - `hasLoops`: boolean (default: false)
@@ -106,15 +110,45 @@ GraphData contains following fields:
   - `defaultNewVertexLabel`
   - `defaultNewVertexWeight`
   - `defaultNewEdgeWeight`
-
-
+  - `addBlankVertex`
 
 
 ## How to generate GraphData object ? 
 
 This is the task of the loader, the very first method of the system. The loader generates a GraphData. 
-It can either create a blank graph or initialize the graph with some data. 
-The data can either be another GraphData object or raw data that requires some processing 
+It create an empty graph. Node and edges can be added to it in bullk using utility functions. The method  takes options realted to graph metadata or other settings.
+
+
+
+```js
+const createGraph = (options = {}) => {
+console.log(options)
+  const initialMetadata = { 
+    title: options.title || "Graph " ,
+    hasLoops: options.hasLoops || false,
+    hasEdgeWeights: options.hasLoops || false,
+    hasDirectedEdges: options.hasDirectedEdges || false,
+    isSimple: options.isSimple || true
+  }
+
+  const initialOptions = {
+    defaultNewEdgeLabel: options.defaultNewEdgeLabel || "" ,
+    defaultNewVertexLabel:options.defaultNewVertexLabel || "", 
+    defaultNewVertexWeight:options.defaultNewVertexWeight || "", 
+    defaultNewEdgeWeight:options.defaultNewEdgeWeight || "",
+    addBlankVertex: options.addBlankVertex|| true 
+  }
+
+  const theGraph = {
+    vertices: {},
+    edges: [],
+    metadata: initialMetadata,
+    options: initialOptions
+  }
+
+  return theGraph
+} 
+```
 
 # Utility functions 
 
@@ -122,13 +156,99 @@ Generating the graph was just the first step. The next step is to manipulate, an
 
 **Conventions**
 - name starts with lower case; camelCase, no symbols, no abbreviations, use full name; 
-- special stating words : `add` , `delete`, `print`, `get` 
+- first argument is always the graph object named `graph`
+- special stating words : `add` , `delete`, `print`, `get` , `update`, `induce`
 
 ## Basic operations
 
 ### addVertex
 
+Input : `options` { `id`, `label`, `weight`, `data` } , 
+
+Steps:
+- check if id provided in the options
+  - if not provided check if blank vertex allowed, if yes assign a random id 
+- check if id already exists
+
+```js
+const addVertex = (graphData,options) =>{
+
+  if(!options.id){
+    if(!graphData.options.addBlankVertex){
+      throw new Error ("No vertex id provided")
+    }else{
+      options.id = Math.floor(Math.random() * (50000) +1)
+    }
+  }
+
+  if(!graphData.vertices[options.id]){
+    graphData.vertices[options.id] = {
+      label: options.label || graphData.options.defaultNewVertexLabel,
+      weight: options.weight || graphData.options.defaultNewEdgeWeight,
+      data: options.data || {},
+      metadata: {
+        degree: 0
+      },
+      temp:{
+
+      }
+    }
+    return graphData
+  }else{
+    throw new Error("Vertex with same id already exists in the graph.")
+  }
+}
+```
+
 ### addEdge
+This is tricky! Depends on the structure of the graph or the metadata flags: `hasLoops`, `hasDirectedEdges`, `isSimple` 
+
+Inputs : `options` { `node1` (required), `node2` (required), `label` ,`weight` }
+
+`isSimple`:
+- `true` : there can be a single edge between any 2 pair of nodes 
+- `false`: multiple edges between 2 nodes allowed
+
+`hasLoops`:
+- `true`: node1 = node2 is possilbe
+- `false`: node1 == node2 not allowed 
+
+`hasDirectedEdges`: determines if we need to treat (node1,node2) and (node2,node2) different 
+
+
+Steps:
+- input data validation 
+
+```js
+const addEdge = (graphData,options)=>{
+
+  if(!options.node1){throw new Error("Node 1 not provided")}
+  if(!options.node2){throw new Error("Node 2 not provided")}
+  
+  if(!graphData.vertices[options.node1]){throw new Error(`Node 1 (${options.node1}) does not exists in the graph`)}
+  if(!graphData.vertices[options.node2]){throw new Error(`Node 2 (${options.node2})  does not exists in the graph`)}
+
+  const node1node2Search = graphData.edges.find(edge=>{return edge.node1 == options.node1 &&  edge.node2 == options.node2})
+  const node2node1Search = graphData.edges.find(edge=>{return edge.node1 == options.node2 &&  edge.node2 == options.node1}) 
+
+  if(graphData.metadata.isSimple){
+    if(node1node2Search || node2node1Search ){ throw new Error(`Edge ${options.node1}--${options.node2} already exists in the simple graph`)}
+  }
+
+  let newEdge = {
+    node1: options.node1,
+    node2: options.node2, 
+    weight:options.weight|| graphData.options.defaultNewEdgeWeight,
+    label:options.label || graphData.options.defaultNewEdgeLabel,
+    temp:{}
+  }
+
+  graphData.edges.push(newEdge)
+
+  return graphData
+
+}
+```
 
 ### deleteVertex
 
@@ -144,6 +264,42 @@ Generating the graph was just the first step. The next step is to manipulate, an
 ### getVertexDegree
 
 ### getEdgeWeight
+
+### getVertexNeighbours
+
+TODO : check later if this works for both simple and multigraph.
+
+```js
+const getVertexNeighbours = (graphData,nodeId)=>{
+  if(!nodeId){throw new Error("No Node Id not provided")}
+  if(!graphData.vertices[nodeId]){throw new Error("Node not found in the graph")}
+
+  let neighbours = []
+  const node1Search = graphData.edges.filter(edge=>return edge.node1 == nodeId)
+  const node2Search = graphData.edges.filter(edge=>return edge.node1 == nodeId) 
+
+  let neighbours = {
+    in:[],
+    out:[],
+    all:[]
+  }
+  node1Search.map(edge2=>{ 
+    if(neighbours.all.indexOf(edge2.node2)==-1){   
+      neighbours.all.push(edge2.node2)
+      neighbours.out.push(edge2.node2)
+    }
+  })
+  node2Search.map(edge1=>{ 
+    if(neighbours.all.indexOf(edge1.node1)==-1){   
+      neighbours.all.push(edge1.node1)
+      neighbours.in.push(edge1.node1)
+    }
+  })
+
+}
+
+
+```
 
 
 
