@@ -1,7 +1,7 @@
-const ec  = require("../scripts/extractCode")
+const ec = require("../scripts/extractCode");
 
 const samples = [
-`# sample
+  `# sample
 \`\`\`js
 const a = 1
 \`\`\`
@@ -24,30 +24,38 @@ sample =1
 \`\`\`
 `,
 
-`\`inline code\``,
-]
+  `\`inline code\``,
+];
 
-const test1 = ()=>{
- samples.map(itm=>{
-  console.log( "===",ec.mdToCode([itm]))
-  console.log( "===",ec.mdToCode([itm],{filter:'python'}))
-  console.log( "===",ec.mdToCode([itm],{filter:'js'}))
- })
-}
+const test1 = () => {
+  samples.map((itm) => {
+    console.log("===", ec.mdToCode([itm]));
+    console.log("===", ec.mdToCode([itm], { filter: "python" }));
+    console.log("===", ec.mdToCode([itm], { filter: "js" }));
+  });
+};
 
-const test2 = async ()=>{
-  const filecontent =  await ec.readMDFile('main.md')
-  console.log(filecontent)
-}
+const test2 = async () => {
+  const filecontent = await ec.readMDFile("main.md");
+  console.log(filecontent);
+};
 
-const test3 = async ()=>{
-  await ec.main({ input:'main.md' , output: 'graph.js' , outputFolder:'testDist' , filter:'none' })
-  console.log('done!')
-}
+const test3 = async () => {
+  await ec.main({
+    input: "main.md",
+    output: "graph.js",
+    outputFolder: "testDist",
+    filter: "none",
+  });
+  console.log("done!");
+};
 
-const main = async ()=>{
- await test3()
-}
+const main = async () => {
+  await test3();
+};
 
-main().then(data=>{
-}).catch(err=>{console.log(err)})
+main()
+  .then((data) => {})
+  .catch((err) => {
+    console.log(err);
+  });
