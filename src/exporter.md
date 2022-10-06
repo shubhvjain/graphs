@@ -8,7 +8,6 @@ module.exports = {
   getVertexKeyMap,
   printEdges,
   BreadthFirstSearch,
-  DepthFirstSearchFromNode,
   DepthFirstSearch
 }
 ```
