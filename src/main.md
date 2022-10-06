@@ -260,7 +260,12 @@ const getVertexNeighbours = (graphData,vertexId)=>{
       neighbours.in.push(edge1.v1)
     }
   })
-  return neighbours
+  if(graphData.metadata.hasDirectedEdges){
+      return neighbours.out
+  }else{
+      return neighbours.all
+  }
+
 }
 ```
 
@@ -271,11 +276,7 @@ This is easy since we can now get a list of neightbours of a vertex.
 ```js
 const getVertexDegree = (graphData,vertexId)=>{
   const neighbours = getVertexNeighbours(graphData,vertexId)
-  return {
-    all: neighbours.all.length,
-    in: neighbours.in.length,
-    out: neighbours.out.length
-  }
+  return  neighbours.length 
 }
 ```
 

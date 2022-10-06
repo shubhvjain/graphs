@@ -24,7 +24,7 @@ const BreadthFirstSearch = (graphData,sourceVertexId)=>{
   while(queue.length > 0){
       const aNode =  queue.shift()
       const sourceNeighbours = getVertexNeighbours(graphCopy,aNode)
-      sourceNeighbours.all.map(neighbour=>{
+      sourceNeighbours.map(neighbour=>{
         const alreadyVisited = 'visited'  in  graphCopy.vertices[neighbour]['temp']
         if(!alreadyVisited){
           queue.push(neighbour)
@@ -68,7 +68,7 @@ const DepthFirstSearch = (graphData)=>{
   const DFS_VISIT = (u) =>{
     visited[u]['color'] = 'grey'
     const neighbours = getVertexNeighbours(graphData,u)
-    neighbours.all.map(neighbour=>{
+    neighbours.map(neighbour=>{
       if (visited[neighbour].color=='white'){
         visited[neighbour]['pi'] = u
         DFS_VISIT(neighbour)

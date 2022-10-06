@@ -97,17 +97,18 @@ const getVertexNeighbours = (graphData,vertexId)=>{
       neighbours.in.push(edge1.v1)
     }
   })
-  return neighbours
+  if(graphData.metadata.hasDirectedEdges){
+      return neighbours.out
+  }else{
+      return neighbours.all
+  }
+
 }
 
 
 const getVertexDegree = (graphData,vertexId)=>{
   const neighbours = getVertexNeighbours(graphData,vertexId)
-  return {
-    all: neighbours.all.length,
-    in: neighbours.in.length,
-    out: neighbours.out.length
-  }
+  return  neighbours.length 
 }
 
 
@@ -141,7 +142,7 @@ const BreadthFirstSearch = (graphData,sourceVertexId)=>{
   while(queue.length > 0){
       const aNode =  queue.shift()
       const sourceNeighbours = getVertexNeighbours(graphCopy,aNode)
-      sourceNeighbours.all.map(neighbour=>{
+      sourceNeighbours.map(neighbour=>{
         const alreadyVisited = 'visited'  in  graphCopy.vertices[neighbour]['temp']
         if(!alreadyVisited){
           queue.push(neighbour)
@@ -172,7 +173,7 @@ const DepthFirstSearch = (graphData)=>{
   const DFS_VISIT = (u) =>{
     visited[u]['color'] = 'grey'
     const neighbours = getVertexNeighbours(graphData,u)
-    neighbours.all.map(neighbour=>{
+    neighbours.map(neighbour=>{
       if (visited[neighbour].color=='white'){
         visited[neighbour]['pi'] = u
         DFS_VISIT(neighbour)
