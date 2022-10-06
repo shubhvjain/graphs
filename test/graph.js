@@ -1,6 +1,5 @@
 
 const createGraph = (options = {}) => {
-console.log(options)
   const initialMetadata = { 
     title: options.title || "Graph " ,
     hasLoops: options.hasLoops || false,
@@ -8,7 +7,6 @@ console.log(options)
     hasDirectedEdges: options.hasDirectedEdges || false,
     isSimple: options.isSimple || true
   }
-
   const initialOptions = {
     defaultNewEdgeLabel: options.defaultNewEdgeLabel || "" ,
     defaultNewVertexLabel:options.defaultNewVertexLabel || "", 
@@ -16,14 +14,12 @@ console.log(options)
     defaultNewEdgeWeight:options.defaultNewEdgeWeight || "",
     addBlankVertex: options.addBlankVertex|| true 
   }
-
   const theGraph = {
     vertices: {},
     edges: [],
     metadata: initialMetadata,
     options: initialOptions
   }
-
   return theGraph
 } 
 
@@ -115,6 +111,21 @@ const getVertexDegree = (graphData,vertexId)=>{
 }
 
 
+const getVertexKeyMap = (graphData,initialObjectValue={})=>{
+  let keyMap = {}
+  const allKeys = Object.keys(graphData.vertices)
+  allKeys.map(ky=>{ keyMap[ky] =  {...initialObjectValue} })
+  return keyMap
+}
+
+
+const printEdges = (graphData)=>{
+  graphData.edges.map(edge=>{
+    console.log(` ${edge.v1}  ---  ${edge.v2} `)
+  })
+}
+
+
 const BreadthFirstSearch = (graphData,sourceVertexId)=>{
   if(!graphData.vertices[sourceVertexId]){throw new Error("Source vertex not found")}
   
@@ -145,12 +156,110 @@ const BreadthFirstSearch = (graphData,sourceVertexId)=>{
 }
 
 
+const DepthFirstSearchFromNode = (graphData,sourceVertexId) => {
+  if(!graphData.vertices[sourceVertexId]){throw new Error("Source vertex does not exist")}
+  
+  let visitedScratchPad = getVertexKeyMap(graphData,{visited:false,c:'w'})
+
+  let theDFSGraph = createGraph({title:`DFS Graph starting with node ${sourceVertexId}`})
+  // theDFSGraph = addVertex(theDFSGraph,{id:sourceVertexId})
+  Object.keys(graphData.vertices).map(v=>{
+      theDFSGraph = addVertex(theDFSGraph,{id:v})
+  })
+  console.log("initally.....")
+  printEdges(theDFSGraph)
+  let stack = []
+  stack.push(sourceVertexId)
+  
+  while(stack.length > 0){  
+    console.log("Current stack",stack)
+      const aNode =  stack.pop()
+      console.log("working with...", aNode)
+      const aNodeAlreadyVisited = visitedScratchPad[aNode]['visited']
+      console.log()
+      if(!aNodeAlreadyVisited){
+        console.log("... not yet visited")
+        visitedScratchPad[aNode]['visited'] = true
+        // theDFSGraph = addVertex(theDFSGraph,{id:aNode})
+        const sourceNeighbours = getVertexNeighbours(graphData,aNode)
+        console.log("   it's neighbours are : ",sourceNeighbours.all)
+        sourceNeighbours.all.map((neighbour,index)=>{
+          
+          const alreadyVisited = visitedScratchPad[neighbour]['visited']
+          if(!alreadyVisited){
+            console.log("...... the neightbour not visited:  ",neighbour)
+            stack.push(neighbour)
+            theDFSGraph = addEdge(theDFSGraph,{v1:aNode,v2:neighbour})
+            
+            console.log("...........must be an edge between ",aNode , " and ", neighbour  )
+          }else{
+            console.log('... neightbour ',neighbour, '  already visited')
+          }
+        })  
+      }
+      printEdges(theDFSGraph)
+  }
+  printEdges(theDFSGraph)
+
+  return theDFSGraph
+}
+
+const DepthFirstSearch = (graphData)=>{
+
+  let theDFSGraph = createGraph({title:`DFS Forest`})
+  Object.keys(graphData.vertices).map(v=>{
+      theDFSGraph = addVertex(theDFSGraph,{id:v})
+  })
+
+  let visited = getVertexKeyMap(graphData,{color:'white', pi: null,f:0,d:0})
+  let time = 0
+  const DFS = () =>{
+    Object.keys(graphData.vertices).map(vertex=>{
+      if (visited[vertex]['color']=='white'){
+              console.log('vertex = ', vertex)
+
+        DFS_VISIT(vertex)
+      }
+    })
+  }
+  const DFS_VISIT = (u) =>{
+    console.log('processing ',u )
+    visited[u]['color'] = 'grey'
+    const neighbours = getVertexNeighbours(graphData,u)
+    neighbours.all.map(neighbour=>{
+      console.log(visited[neighbour])
+      if (visited[neighbour].color=='white'){
+        console.log("yes white")
+        visited[neighbour]['pi'] = u
+        console.log(visited)
+        DFS_VISIT(neighbour)
+      }
+    })
+    visited[u]['color'] = 'black'
+
+  }
+
+  DFS()
+console.log(visited)
+Object.keys(visited).map(ver=>{ 
+  if(visited[ver]['pi']){
+    theDFSGraph = addEdge(theDFSGraph,{v1: visited[ver]['pi'] , v2: ver })
+  }
+})
+return theDFSGraph
+}
+
+
+
 module.exports = {
   createGraph,
-  addVertex,addEdge,
+  addVertex,
+  addEdge,
   getVertexNeighbours,
   getVertexDegree,
-
+  getVertexKeyMap,
+  printEdges,
   BreadthFirstSearch,
-
+  DepthFirstSearchFromNode,
+  DepthFirstSearch
 }

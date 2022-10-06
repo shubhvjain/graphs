@@ -63,7 +63,7 @@ a = {   "1,1": 1 , "1,2":2 , "1,3":3 ,
 ```
 Adding a new edge is easy now. But this is not of much use as further processing of graphs require searching for individual vertices connected by an edge. For e.g. to find degree of a vertex, we would require to search for a regular expression in the array of key hash which is an additional step. 
 
-Another ways it to change the 2 dimensional array into a 1 dimensional array. This can be done by by representing edge as an object with 2 main fields: v1, v2 (and some additional fields)
+Another ways it to change the 2 dimensional array into a 1 dimensional array. This can be done by  representing edge as an object with 2 main fields: v1, v2 (and some additional fields)
 
 So far our representation only overs edges in the graph. But a graph has more parameters 
 
@@ -102,9 +102,9 @@ GraphData contains following fields:
 - `metadata`: object, this contains important properties that define the structue of the graph.
   - `title` : the title of the graph 
   - `hasLoops`: boolean (default: false)
-  - `hasEdgeWeights`: boolean (default: false)
   - `hasDirectedEdges`: boolean (default:false)
   - `isSimple`: boolean(defualt:true)
+  - `hasEdgeWeights`: boolean (default: false)
 - `options`: object. this contains additional configurations related to the graph. this may include
   - `defaultNewEdgeLabel`
   - `defaultNewVertexLabel`
@@ -119,10 +119,8 @@ This is the task of the loader, the very first method of the system. The loader 
 It create an empty graph. Vertices and edges can be added to it in bullk using utility functions. The method  takes options realted to graph metadata or other settings.
 
 
-
 ```js
 const createGraph = (options = {}) => {
-console.log(options)
   const initialMetadata = { 
     title: options.title || "Graph " ,
     hasLoops: options.hasLoops || false,
@@ -130,7 +128,6 @@ console.log(options)
     hasDirectedEdges: options.hasDirectedEdges || false,
     isSimple: options.isSimple || true
   }
-
   const initialOptions = {
     defaultNewEdgeLabel: options.defaultNewEdgeLabel || "" ,
     defaultNewVertexLabel:options.defaultNewVertexLabel || "", 
@@ -138,14 +135,12 @@ console.log(options)
     defaultNewEdgeWeight:options.defaultNewEdgeWeight || "",
     addBlankVertex: options.addBlankVertex|| true 
   }
-
   const theGraph = {
     vertices: {},
     edges: [],
     metadata: initialMetadata,
     options: initialOptions
   }
-
   return theGraph
 } 
 ```
@@ -154,7 +149,7 @@ console.log(options)
 
 Generating the graph was just the first step. The next step is to manipulate, analyze the graph. We need to define some basic operations on the graph. These are performed by utility functions. 
 
-**Conventions**
+**Conventions for utility functions**
 - name starts with lower case; camelCase, no symbols, no abbreviations, use full name; 
 - first argument is always the graph object named `graph`
 - special stating words : `add` , `delete`, `print`, `get` , `update`, `induce`
@@ -198,16 +193,11 @@ This is tricky! Depends on the structure of the graph or the metadata flags: `ha
 
 Inputs : `options` { `v1` (required), `v2` (required), `label` ,`weight` }
 
-`isSimple`:
-- `true` : there can be a single edge between any 2 pair of nodes 
-- `false`: multiple edges between 2 nodes allowed
+`isSimple`: if `true` : there can be a single edge between any 2 pair of nodes ; if  `false`: multiple edges between 2 nodes allowed
 
-`hasLoops`:
-- `true`: node1 = node2 is possilbe
-- `false`: node1 == node2 not allowed 
+`hasLoops`: if `true`: node1 = node2 is possilbe; if  `false`: node1 == node2 not allowed 
 
 `hasDirectedEdges`: determines if we need to treat (v1,v2) and (v2,v1) different 
-
 
 Steps:
 - input data validation 
@@ -298,3 +288,28 @@ const getVertexDegree = (graphData,vertexId)=>{
 ### getGraphMetadata
 
 ### getEdgeWeight
+
+### getVertexKeyMap
+
+in many graph algorithms, we require some way to keep track of a temporary value for all the vetrcies the graph. this utility function returns an object with all vertices id as keys and a  blank object as its value. 
+
+```js
+const getVertexKeyMap = (graphData,initialObjectValue={})=>{
+  let keyMap = {}
+  const allKeys = Object.keys(graphData.vertices)
+  allKeys.map(ky=>{ keyMap[ky] =  {...initialObjectValue} })
+  return keyMap
+}
+```
+### printEdges
+
+```js
+const printEdges = (graphData)=>{
+  graphData.edges.map(edge=>{
+    console.log(` ${edge.v1}  ---  ${edge.v2} `)
+  })
+}
+```
+
+### simpleTestsOnGraph()
+

@@ -1,5 +1,5 @@
-const main = require("../testDist/graph");
-const print = (obj)=>{console.log(JSON.stringify(obj,null,2))}
+const main = require("./graph");
+const print = (obj)=>{console.log(JSON.stringify(obj,null,1))}
 
 const vertices = ["1","2","3","4","5","6"]
 const edges = [
@@ -42,14 +42,3 @@ const neighbours = ()=>{
   })
 }
 // neighbours()
-
-const bfs = ()=>{
-  //print(main.BreadthFirstSearch(g1,'0'))
-
-  print(main.BreadthFirstSearch(g1,'1'))
-  print(main.BreadthFirstSearch(g1,'6'))
-
-
-}
-bfs()
-

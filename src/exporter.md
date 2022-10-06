@@ -1,11 +1,14 @@
 ```js
 module.exports = {
   createGraph,
-  addVertex,addEdge,
+  addVertex,
+  addEdge,
   getVertexNeighbours,
   getVertexDegree,
-
+  getVertexKeyMap,
+  printEdges,
   BreadthFirstSearch,
-
+  DepthFirstSearchFromNode,
+  DepthFirstSearch
 }
 ```
