@@ -158,7 +158,7 @@ const generateGraphPreview = async (graphs,options)=>{
               let network${index} = new vis.Network(container${index}, data${index}, ${JSON.stringify(dataForViz['options'])});
             </script>
       `
-              console.log(graphHtml)
+              // console.log(graphHtml)
 
       })
       const htmlTemplate = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -172,6 +172,7 @@ const generateGraphPreview = async (graphs,options)=>{
     await formats[options.format]()
   }catch(error){console.log(error)}
 }
+
 
 const BreadthFirstSearch = (graphData,sourceVertexId)=>{
   if(!graphData.vertices[sourceVertexId]){throw new Error("Source vertex not found")}
@@ -204,10 +205,6 @@ const BreadthFirstSearch = (graphData,sourceVertexId)=>{
 
 
 const DepthFirstSearch = (graphData)=>{
-  let theDFSGraph = createGraph({title:`DFS Forest`, hasDirectedEdges: true})
-  Object.keys(graphData.vertices).map(v=>{
-      theDFSGraph = addVertex(theDFSGraph,{id:v})
-  })
   let visited = getVertexKeyMap(graphData,{color:'white', pi: null})
   const DFS = () =>{
     Object.keys(graphData.vertices).map(vertex=>{
@@ -228,6 +225,8 @@ const DepthFirstSearch = (graphData)=>{
     visited[u]['color'] = 'black'
   }
   DFS()
+  let theDFSGraph = createGraph({title:`DFS Forest`, hasDirectedEdges: true})
+  Object.keys(graphData.vertices).map(v=>{theDFSGraph = addVertex(theDFSGraph,{id:v})})
   Object.keys(visited).map(ver=>{ 
     if(visited[ver]['pi']){
       theDFSGraph = addEdge(theDFSGraph,{v1: visited[ver]['pi'] , v2: ver })

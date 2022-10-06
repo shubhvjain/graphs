@@ -67,11 +67,15 @@ const main = async (options) => {
   const fileNames = options.input.split(",")
   for(let i=0; i<fileNames.length;i++){
     const fileContent = await readMDFile(fileNames[i]);
-    console.log(fileContent.length)
+    // console.log(fileContent.length)
     files.push(fileContent)
   }
   const codeFile = mdToCode(files, { filter: options.filter });
-  await saveToFile(options.output, codeFile, options.outputFolder);
+  if(!options.outputFormat){
+    await saveToFile(options.output, codeFile, options.outputFolder);
+  }else if(options.outputFormat == 'text'){
+    return codeFile
+  }
 };
 
 module.exports = { mdToCode, readMDFile, main };

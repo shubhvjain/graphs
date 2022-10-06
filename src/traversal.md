@@ -53,10 +53,6 @@ This version of the algorithm is adapted from Cormen, Thomas, Charles Leiserson,
 
 ```js
 const DepthFirstSearch = (graphData)=>{
-  let theDFSGraph = createGraph({title:`DFS Forest`, hasDirectedEdges: true})
-  Object.keys(graphData.vertices).map(v=>{
-      theDFSGraph = addVertex(theDFSGraph,{id:v})
-  })
   let visited = getVertexKeyMap(graphData,{color:'white', pi: null})
   const DFS = () =>{
     Object.keys(graphData.vertices).map(vertex=>{
@@ -77,6 +73,8 @@ const DepthFirstSearch = (graphData)=>{
     visited[u]['color'] = 'black'
   }
   DFS()
+  let theDFSGraph = createGraph({title:`DFS Forest`, hasDirectedEdges: true})
+  Object.keys(graphData.vertices).map(v=>{theDFSGraph = addVertex(theDFSGraph,{id:v})})
   Object.keys(visited).map(ver=>{ 
     if(visited[ver]['pi']){
       theDFSGraph = addEdge(theDFSGraph,{v1: visited[ver]['pi'] , v2: ver })
