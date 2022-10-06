@@ -1,18 +1,5 @@
-const main = require("./graph");
-const print = (obj,indent=1)=>{console.log(JSON.stringify(obj,null,indent))}
-const generateTestGraph = (vertices,edges)=>{
-  let g1 = main.createGraph({"title":"A graph"})
-  vertices.map(vtx=>{g1 = main.addVertex(g1,{id:vtx})})
-  edges.map(edge=>{
-    try {
-      g1 = main.addEdge(g1,edge)
-    } catch (error) {
-      console.log("Error in inserting edge....")
-      console.log(error)
-    }
-  })
-  return {...g1}
-}
+const main = require('./graph');
+const ut = require('./testUtils')
 
 const vertices1 = ["1","2","3","4","5","6"]
 const edges1 = [
@@ -24,7 +11,7 @@ const edges1 = [
   {v1:"6",v2:"5"},
 ]
 
-let  g1 = generateTestGraph(vertices1,edges1) 
+let  g1 = ut.generateTestGraph(vertices1,edges1) 
 
 const vertexG2 = ['a','b','c','d','e','f']
 const edgesG2 = [
@@ -35,19 +22,19 @@ const edgesG2 = [
   {v1:'e' , v2:'f'},
   {v1:'e' , v2:'b'},
 ]
-let graph2 = generateTestGraph(vertexG2,edgesG2)
+let graph2 = ut.generateTestGraph(vertexG2,edgesG2,{hasDirectedEdges:true})
 
 
 
 const bfs = ()=>{
-  print(main.BreadthFirstSearch(g1,'1'),0)
-  print(main.BreadthFirstSearch(g1,'6'),0)
+  ut.print(main.BreadthFirstSearch(g1,'1'),0)
+  ut.print(main.BreadthFirstSearch(g1,'6'),0)
 }
 // bfs()
 
 const dfs2 = ()=>{
   // print(g1,0)
   const dfs =  main.DepthFirstSearch(graph2)
-  print(dfs,0)
+  ut.print(dfs,0)
 }
 dfs2()
