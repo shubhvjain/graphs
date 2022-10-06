@@ -53,7 +53,7 @@ This version of the algorithm is adapted from Cormen, Thomas, Charles Leiserson,
 
 ```js
 const DepthFirstSearch = (graphData)=>{
-  let theDFSGraph = createGraph({title:`DFS Forest`})
+  let theDFSGraph = createGraph({title:`DFS Forest`, hasDirectedEdges: true})
   Object.keys(graphData.vertices).map(v=>{
       theDFSGraph = addVertex(theDFSGraph,{id:v})
   })
@@ -85,3 +85,16 @@ const DepthFirstSearch = (graphData)=>{
   return theDFSGraph
 }
 ```
+
+
+# Some applications of Depth first search 
+
+They will be moved to appropriate pages later 
+
+## Finding connected components
+
+## Finding if a directed graph is acyclic 
+
+## Topological ordering 
+
+

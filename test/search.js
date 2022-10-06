@@ -32,9 +32,10 @@ const bfs = ()=>{
 }
 // bfs()
 
-const dfs2 = ()=>{
+const dfs2 = async()=>{
   // print(g1,0)
   const dfs =  main.DepthFirstSearch(graph2)
+  await main.generateGraphPreview([graph2,dfs],{format:'html',outputPath:'./test/graph2.html'})
   ut.print(dfs,0)
 }
 dfs2()

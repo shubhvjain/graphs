@@ -302,15 +302,5 @@ const getVertexKeyMap = (graphData,initialObjectValue={})=>{
   return keyMap
 }
 ```
-### printEdges
 
-```js
-const printEdges = (graphData)=>{
-  graphData.edges.map(edge=>{
-    console.log(` ${edge.v1}  ---  ${edge.v2} `)
-  })
-}
-```
-
-### simpleTestsOnGraph()
-
+### simpleTestsOnGraph

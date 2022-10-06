@@ -7,6 +7,7 @@ module.exports = {
   getVertexDegree,
   getVertexKeyMap,
   printEdges,
+  generateGraphPreview,
   BreadthFirstSearch,
   DepthFirstSearch
 }
