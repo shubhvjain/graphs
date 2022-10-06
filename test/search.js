@@ -45,14 +45,6 @@ const bfs = ()=>{
 }
 // bfs()
 
-const dfs1 = ()=>{
-  print(g1,0)
-  const dfs =  main.DepthFirstSearchFromNode(g1,'1')
-  print(dfs,0)
-}
-// dfs1()
-
-
 const dfs2 = ()=>{
   // print(g1,0)
   const dfs =  main.DepthFirstSearch(graph2)
