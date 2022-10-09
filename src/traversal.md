@@ -58,6 +58,7 @@ const DepthFirstSearch = (graphData)=>{
   //Object.keys(visited).map(itm=>{allVertices.push({vertex: itm,degree: visited[itm]['degree']})})
   //allVertices = allVertices.sort((a,b)=>{return b.degree - a.degree})
   let time = 0
+  let otherEdges = []
   const DFS = () =>{
     Object.keys(graphData.vertices).map(vertex =>{
       if (visited[vertex]['color']=='white'){
@@ -74,6 +75,14 @@ const DepthFirstSearch = (graphData)=>{
       if (visited[neighbour].color=='white'){
           visited[neighbour]['pi'] = u
           DFS_VISIT(neighbour)
+        }else{
+          let eType = visited[neighbour]['color']=="grey" ? "backward-edge":  "cross-edge"
+          otherEdges.push({
+            v1: u,
+            v2: neighbour,
+            label: eType ,
+            temp: {color: eType=="backward-edge" ? "red" : "violet"  }
+          })
         }
       })
       visited[u]['color'] = 'black'
@@ -82,16 +91,25 @@ const DepthFirstSearch = (graphData)=>{
   }
   DFS()
   let theDFSGraph = createGraph({title:`DFS Forest`, hasDirectedEdges: true})
-  Object.keys(graphData.vertices).map(v=>{theDFSGraph = addVertex(theDFSGraph,{id:v})})
+  Object.keys(graphData.vertices).map(v=>{
+    theDFSGraph = addVertex(theDFSGraph,
+      {
+        id:v, 
+        label: `${v} (d=${visited[v]['d']},f=${visited[v]['f']})` ,
+        temp: visited[v]
+      })
+  })
   Object.keys(visited).map(ver=>{ 
     if(visited[ver]['pi']){
-      theDFSGraph = addEdge(theDFSGraph,{v1: visited[ver]['pi'] , v2: ver })
+      theDFSGraph = addEdge(theDFSGraph,{v1: visited[ver]['pi'] , v2: ver, label:"tree-edge", temp: {color:'green'}})
     }
+  })
+  otherEdges.map(edg=>{
+      theDFSGraph = addEdge(theDFSGraph,edg)
   })
   return theDFSGraph
 }
 ```
-
 
 # Some applications of Depth first search 
 They will be moved to appropriate pages later 
@@ -100,5 +118,34 @@ They will be moved to appropriate pages later
 
 ## Finding if a directed graph is acyclic 
 
+```js
+const CheckForCyclesInGraph = (graphData) => {
+  const DFSTree = DepthFirstSearch(graphData)
+  const backEdges = DFSTree.edges.filter(edge=>{return edge.label=='backward-edge'})
+  return { cycleExists : backEdges.length > 0   , edges: backEdges, dfsTree : DFSTree }
+}
+```
+
 ## Topological ordering 
 
+
+```js
+const TopologicalSort = (graphData)=>{
+  const cycleCheck = CheckForCyclesInGraph(graphData)
+  if(cycleCheck.cycleExists){
+    throw new Error("This graph has cycles. Topological sort not possible")
+  }
+  let tSortedGraph = createGraph({title:`Topological sorting`, hasDirectedEdges: true})
+  tSortedGraph.vertices  =  JSON.parse(JSON.stringify(cycleCheck.dfsTree.vertices))
+  let vertexOrder = []
+  Object.keys(cycleCheck.dfsTree.vertices).map(v=>{
+    vertexOrder.push({vertexId:v,fVal : cycleCheck.dfsTree.vertices[v]['temp']['f'] })
+  })
+  vertexOrder = vertexOrder.sort((a,b)=>{ return a.fVal - b.fVal })
+  
+  for(let i = 0; i <= vertexOrder.length - 2  ; i++ ){
+    tSortedGraph = addEdge(tSortedGraph,{v1:vertexOrder[i]['vertexId'] , v2: vertexOrder[i+1]['vertexId'] })
+  }
+  return  { vertexInOrder : vertexOrder, dfsTree : cycleCheck.dfsTree  , tsTree: tSortedGraph  }
+}
+```

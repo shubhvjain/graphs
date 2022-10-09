@@ -9,6 +9,8 @@ module.exports = {
   printEdges,
   generateGraphPreview,
   BreadthFirstSearch,
-  DepthFirstSearch
+  DepthFirstSearch,
+  CheckForCyclesInGraph,
+  TopologicalSort
 }
 ```
