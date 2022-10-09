@@ -1,5 +1,5 @@
 /*** 
-the Graph program. Version 1.0.0 . 
+the Graph program. Version 1.0.1 . 
 Full source code is available at https://github.com/shubhvjain/graphs
 Copyright (C) 2022  Shubh
 
@@ -132,10 +132,20 @@ const getVertexDegree = (graphData,vertexId)=>{
 }
 
 
-const getVertexKeyMap = (graphData,initialObjectValue={})=>{
+const getVertexKeyMap = (graphData,options={vertexProperties:[],initialObjectValue:{}})=>{
   let keyMap = {}
   const allKeys = Object.keys(graphData.vertices)
-  allKeys.map(ky=>{ keyMap[ky] =  {...initialObjectValue} })
+  vertexProps = {
+    'degree':(vertexId)=>{
+      return getVertexDegree(graphData,vertexId)
+    }
+  }
+  allKeys.map(ky=>{
+     keyMap[ky] =  {...options.initialObjectValue}
+     options.vertexProperties.map(prop=>{
+        keyMap[ky][prop] = vertexProps[prop](ky)
+     })
+  })
   return keyMap
 }
 
@@ -225,24 +235,32 @@ const BreadthFirstSearch = (graphData,sourceVertexId)=>{
 
 
 const DepthFirstSearch = (graphData)=>{
-  let visited = getVertexKeyMap(graphData,{color:'white', pi: null})
+  let visited = getVertexKeyMap(graphData,{vertexProperties:["degree"], initialObjectValue :{color:'white', pi: null, d: 0, f:0}})
+  //let allVertices = []
+  //Object.keys(visited).map(itm=>{allVertices.push({vertex: itm,degree: visited[itm]['degree']})})
+  //allVertices = allVertices.sort((a,b)=>{return b.degree - a.degree})
+  let time = 0
   const DFS = () =>{
-    Object.keys(graphData.vertices).map(vertex=>{
+    Object.keys(graphData.vertices).map(vertex =>{
       if (visited[vertex]['color']=='white'){
         DFS_VISIT(vertex)
       }
     })
   }
   const DFS_VISIT = (u) =>{
+    time = time +1 
+    visited[u]['d'] = time
     visited[u]['color'] = 'grey'
-    const neighbours = getVertexNeighbours(graphData,u)
+    const neighbours = getVertexNeighbours(graphData,u) 
     neighbours.map(neighbour=>{
       if (visited[neighbour].color=='white'){
-        visited[neighbour]['pi'] = u
-        DFS_VISIT(neighbour)
-      }
-    })
-    visited[u]['color'] = 'black'
+          visited[neighbour]['pi'] = u
+          DFS_VISIT(neighbour)
+        }
+      })
+      visited[u]['color'] = 'black'
+      time = time + 1
+      visited[u]['f'] = time 
   }
   DFS()
   let theDFSGraph = createGraph({title:`DFS Forest`, hasDirectedEdges: true})
