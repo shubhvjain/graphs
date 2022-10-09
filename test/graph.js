@@ -36,10 +36,10 @@ const addVertex = (graphData,options) =>{
     throw new Error("Vertex with same id already exists in the graph.")
   }
   graphData.vertices[options.id] = {
-    label: options.label || graphData.options.defaultNewVertexLabel,
+    label: options.label || options.id ,
     weight: 'weight' in options ? options.weight : graphData.options.defaultNewVertexWeight,
     data: options.data,
-    temp:{}
+    temp: {...options.temp}
   }
   return graphData
   
@@ -66,7 +66,7 @@ const addEdge = (graphData,options)=>{
     v2: options.v2, 
     weight:options.weight|| graphData.options.defaultNewEdgeWeight,
     label:options.label || graphData.options.defaultNewEdgeLabel,
-    temp:{}
+    temp: {...options.temp}
   }
 
   graphData.edges.push(newEdge)
@@ -112,10 +112,20 @@ const getVertexDegree = (graphData,vertexId)=>{
 }
 
 
-const getVertexKeyMap = (graphData,initialObjectValue={})=>{
+const getVertexKeyMap = (graphData,options={vertexProperties:[],initialObjectValue:{}})=>{
   let keyMap = {}
   const allKeys = Object.keys(graphData.vertices)
-  allKeys.map(ky=>{ keyMap[ky] =  {...initialObjectValue} })
+  vertexProps = {
+    'degree':(vertexId)=>{
+      return getVertexDegree(graphData,vertexId)
+    }
+  }
+  allKeys.map(ky=>{
+     keyMap[ky] =  {...options.initialObjectValue}
+     options.vertexProperties.map(prop=>{
+        keyMap[ky][prop] = vertexProps[prop](ky)
+     })
+  })
   return keyMap
 }
 
@@ -139,15 +149,22 @@ const generateGraphPreview = async (graphs,options)=>{
       graphs.map((graph,index)=>{
         let vertexInVisFormat = []
         const vertex = Object.keys(graph.vertices)
-        vertex.map(v=>{vertexInVisFormat.push( { id:v , label: v } )})
+        vertex.map(v=>{vertexInVisFormat.push( { id:v , label: graph['vertices'][v]['label']|| v  } )})
         let edgesInVisFormat = []
-        graph.edges.map(e=>{edgesInVisFormat.push({ from : e.v1, to: e.v2 })})
+        graph.edges.map(e=>{
+          let newEdge = { from : e.v1, to: e.v2, color: e.temp['color']  }
+          if(e.label){
+            newEdge['label'] = e['label']
+          }
+          edgesInVisFormat.push(newEdge)
+        })
         let visOptions = {}
         if(graph.metadata.hasDirectedEdges){visOptions['edges'] = { arrows: 'to'}}
         const dataForViz = {nodes : vertexInVisFormat,edges:  edgesInVisFormat,options: visOptions}
         graphHtml += `
             <h2> #${index+1}. ${graph.metadata.title}</h2>
             <div class="graph" id="graph${index}"></div>
+            <details><summary>GraphData</summary><pre>${JSON.stringify(graph,null,2)}</pre></details>
             <script>
               let dataForViz${index} = ${JSON.stringify(dataForViz)}
               const container${index} = document.getElementById('graph${index}')
@@ -205,35 +222,92 @@ const BreadthFirstSearch = (graphData,sourceVertexId)=>{
 
 
 const DepthFirstSearch = (graphData)=>{
-  let visited = getVertexKeyMap(graphData,{color:'white', pi: null})
+  let visited = getVertexKeyMap(graphData,{vertexProperties:["degree"], initialObjectValue :{color:'white', pi: null, d: 0, f:0}})
+  //let allVertices = []
+  //Object.keys(visited).map(itm=>{allVertices.push({vertex: itm,degree: visited[itm]['degree']})})
+  //allVertices = allVertices.sort((a,b)=>{return b.degree - a.degree})
+  let time = 0
+  let otherEdges = []
   const DFS = () =>{
-    Object.keys(graphData.vertices).map(vertex=>{
+    Object.keys(graphData.vertices).map(vertex =>{
       if (visited[vertex]['color']=='white'){
         DFS_VISIT(vertex)
       }
     })
   }
   const DFS_VISIT = (u) =>{
+    time = time +1 
+    visited[u]['d'] = time
     visited[u]['color'] = 'grey'
-    const neighbours = getVertexNeighbours(graphData,u)
+    const neighbours = getVertexNeighbours(graphData,u) 
     neighbours.map(neighbour=>{
       if (visited[neighbour].color=='white'){
-        visited[neighbour]['pi'] = u
-        DFS_VISIT(neighbour)
-      }
-    })
-    visited[u]['color'] = 'black'
+          visited[neighbour]['pi'] = u
+          DFS_VISIT(neighbour)
+        }else{
+          let eType = visited[neighbour]['color']=="grey" ? "backward-edge":  "cross-edge"
+          otherEdges.push({
+            v1: u,
+            v2: neighbour,
+            label: eType ,
+            temp: {color: eType=="backward-edge" ? "red" : "violet"  }
+          })
+        }
+      })
+      visited[u]['color'] = 'black'
+      time = time + 1
+      visited[u]['f'] = time 
   }
   DFS()
   let theDFSGraph = createGraph({title:`DFS Forest`, hasDirectedEdges: true})
-  Object.keys(graphData.vertices).map(v=>{theDFSGraph = addVertex(theDFSGraph,{id:v})})
+  Object.keys(graphData.vertices).map(v=>{
+    theDFSGraph = addVertex(theDFSGraph,
+      {
+        id:v, 
+        label: `${v} (d=${visited[v]['d']},f=${visited[v]['f']})` ,
+        temp: visited[v]
+      })
+  })
   Object.keys(visited).map(ver=>{ 
     if(visited[ver]['pi']){
-      theDFSGraph = addEdge(theDFSGraph,{v1: visited[ver]['pi'] , v2: ver })
+      theDFSGraph = addEdge(theDFSGraph,{v1: visited[ver]['pi'] , v2: ver, label:"tree-edge", temp: {color:'green'}})
     }
+  })
+  otherEdges.map(edg=>{
+      theDFSGraph = addEdge(theDFSGraph,edg)
   })
   return theDFSGraph
 }
+
+
+const CheckForCyclesInGraph = (graphData) => {
+  const DFSTree = DepthFirstSearch(graphData)
+  const backEdges = DFSTree.edges.filter(edge=>{return edge.label=='backward-edge'})
+  return { cycleExists : backEdges.length > 0   , edges: backEdges, dfsTree : DFSTree }
+}
+
+
+const TopologicalSort = (graphData)=>{
+  const cycleCheck = CheckForCyclesInGraph(graphData)
+  if(cycleCheck.cycleExists){
+    throw new Error("This graph has cycles. Topological sort not possible")
+  }
+  let tSortedGraph = createGraph({title:`Topological sorting`, hasDirectedEdges: true})
+  tSortedGraph.vertices  =  JSON.parse(JSON.stringify(cycleCheck.dfsTree.vertices))
+  let vertexOrder = []
+  Object.keys(cycleCheck.dfsTree.vertices).map(v=>{
+    vertexOrder.push({vertexId:v,fVal : cycleCheck.dfsTree.vertices[v]['temp']['f'] })
+  })
+  vertexOrder = vertexOrder.sort((a,b)=>{ return a.fVal - b.fVal })
+  
+  for(let i = 0; i <= vertexOrder.length - 2  ; i++ ){
+    tSortedGraph = addEdge(tSortedGraph,{v1:vertexOrder[i]['vertexId'] , v2: vertexOrder[i+1]['vertexId'] })
+  }
+  return  { vertexInOrder : vertexOrder, dfsTree : cycleCheck.dfsTree  , tsTree: tSortedGraph  }
+}
+
+
+
 
 
 module.exports = {
@@ -246,5 +320,7 @@ module.exports = {
   printEdges,
   generateGraphPreview,
   BreadthFirstSearch,
-  DepthFirstSearch
+  DepthFirstSearch,
+  CheckForCyclesInGraph,
+  TopologicalSort
 }
