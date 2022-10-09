@@ -295,10 +295,20 @@ const getVertexDegree = (graphData,vertexId)=>{
 in many graph algorithms, we require some way to keep track of a temporary value for all the vetrcies the graph. this utility function returns an object with all vertices id as keys and a  blank object as its value. 
 
 ```js
-const getVertexKeyMap = (graphData,initialObjectValue={})=>{
+const getVertexKeyMap = (graphData,options={vertexProperties:[],initialObjectValue:{}})=>{
   let keyMap = {}
   const allKeys = Object.keys(graphData.vertices)
-  allKeys.map(ky=>{ keyMap[ky] =  {...initialObjectValue} })
+  vertexProps = {
+    'degree':(vertexId)=>{
+      return getVertexDegree(graphData,vertexId)
+    }
+  }
+  allKeys.map(ky=>{
+     keyMap[ky] =  {...options.initialObjectValue}
+     options.vertexProperties.map(prop=>{
+        keyMap[ky][prop] = vertexProps[prop](ky)
+     })
+  })
   return keyMap
 }
 ```

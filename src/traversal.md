@@ -53,24 +53,32 @@ This version of the algorithm is adapted from Cormen, Thomas, Charles Leiserson,
 
 ```js
 const DepthFirstSearch = (graphData)=>{
-  let visited = getVertexKeyMap(graphData,{color:'white', pi: null})
+  let visited = getVertexKeyMap(graphData,{vertexProperties:["degree"], initialObjectValue :{color:'white', pi: null, d: 0, f:0}})
+  //let allVertices = []
+  //Object.keys(visited).map(itm=>{allVertices.push({vertex: itm,degree: visited[itm]['degree']})})
+  //allVertices = allVertices.sort((a,b)=>{return b.degree - a.degree})
+  let time = 0
   const DFS = () =>{
-    Object.keys(graphData.vertices).map(vertex=>{
+    Object.keys(graphData.vertices).map(vertex =>{
       if (visited[vertex]['color']=='white'){
         DFS_VISIT(vertex)
       }
     })
   }
   const DFS_VISIT = (u) =>{
+    time = time +1 
+    visited[u]['d'] = time
     visited[u]['color'] = 'grey'
-    const neighbours = getVertexNeighbours(graphData,u)
+    const neighbours = getVertexNeighbours(graphData,u) 
     neighbours.map(neighbour=>{
       if (visited[neighbour].color=='white'){
-        visited[neighbour]['pi'] = u
-        DFS_VISIT(neighbour)
-      }
-    })
-    visited[u]['color'] = 'black'
+          visited[neighbour]['pi'] = u
+          DFS_VISIT(neighbour)
+        }
+      })
+      visited[u]['color'] = 'black'
+      time = time + 1
+      visited[u]['f'] = time 
   }
   DFS()
   let theDFSGraph = createGraph({title:`DFS Forest`, hasDirectedEdges: true})
@@ -86,7 +94,6 @@ const DepthFirstSearch = (graphData)=>{
 
 
 # Some applications of Depth first search 
-
 They will be moved to appropriate pages later 
 
 ## Finding connected components
@@ -94,5 +101,4 @@ They will be moved to appropriate pages later
 ## Finding if a directed graph is acyclic 
 
 ## Topological ordering 
-
 
