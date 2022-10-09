@@ -67,10 +67,21 @@ const generateNewVersion = async (verType)=> {
   ver['major'] = parseInt(parts[0])
   ver['minor'] = parseInt(parts[1])
   ver['patch'] = parseInt(parts[2])
-  //console.log(ver)
-  ver[verType] += 1
-  //console.log(verType)
-
+  const verRel = {
+    major:()=>{
+      ver[verType] += 1
+      ver['minor'] =  0
+      ver['patch'] =  0
+    },
+    minor:()=>{
+      ver[verType] += 1
+      ver['patch'] =  0
+    },
+    patch:()=>{
+      ver[verType] += 1
+    }
+  }
+  verRel[verType]()
   return {version: `${ver['major']}.${ver['minor']}.${ver['patch']}` }
 }
 
