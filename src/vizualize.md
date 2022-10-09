@@ -25,15 +25,22 @@ const generateGraphPreview = async (graphs,options)=>{
       graphs.map((graph,index)=>{
         let vertexInVisFormat = []
         const vertex = Object.keys(graph.vertices)
-        vertex.map(v=>{vertexInVisFormat.push( { id:v , label: v } )})
+        vertex.map(v=>{vertexInVisFormat.push( { id:v , label: graph['vertices'][v]['label']|| v  } )})
         let edgesInVisFormat = []
-        graph.edges.map(e=>{edgesInVisFormat.push({ from : e.v1, to: e.v2 })})
+        graph.edges.map(e=>{
+          let newEdge = { from : e.v1, to: e.v2, color: e.temp['color']  }
+          if(e.label){
+            newEdge['label'] = e['label']
+          }
+          edgesInVisFormat.push(newEdge)
+        })
         let visOptions = {}
         if(graph.metadata.hasDirectedEdges){visOptions['edges'] = { arrows: 'to'}}
         const dataForViz = {nodes : vertexInVisFormat,edges:  edgesInVisFormat,options: visOptions}
         graphHtml += `
             <h2> #${index+1}. ${graph.metadata.title}</h2>
             <div class="graph" id="graph${index}"></div>
+            <details><summary>GraphData</summary><pre>${JSON.stringify(graph,null,2)}</pre></details>
             <script>
               let dataForViz${index} = ${JSON.stringify(dataForViz)}
               const container${index} = document.getElementById('graph${index}')

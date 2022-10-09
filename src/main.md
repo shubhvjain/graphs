@@ -178,10 +178,10 @@ const addVertex = (graphData,options) =>{
     throw new Error("Vertex with same id already exists in the graph.")
   }
   graphData.vertices[options.id] = {
-    label: options.label || graphData.options.defaultNewVertexLabel,
+    label: options.label || options.id ,
     weight: 'weight' in options ? options.weight : graphData.options.defaultNewVertexWeight,
     data: options.data,
-    temp:{}
+    temp: {...options.temp}
   }
   return graphData
   
@@ -223,7 +223,7 @@ const addEdge = (graphData,options)=>{
     v2: options.v2, 
     weight:options.weight|| graphData.options.defaultNewEdgeWeight,
     label:options.label || graphData.options.defaultNewEdgeLabel,
-    temp:{}
+    temp: {...options.temp}
   }
 
   graphData.edges.push(newEdge)
