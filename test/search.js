@@ -487,4 +487,4 @@ gs.map(g=>{
 await main.generateGraphPreview(views,{format:'html',outputPath:'./test/graph6.html'})
 }
 
-ts()
+// ts()

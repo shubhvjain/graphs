@@ -312,5 +312,19 @@ const getVertexKeyMap = (graphData,options={vertexProperties:[],initialObjectVal
   return keyMap
 }
 ```
+### addVertexLabels
+
+to add/modify label of multiple vertices at once.the input is an object keys are vertex ids, values are new labels 
+
+```
+const updateVertexLabels = (graphData, labels={} ) =>{
+ Object.keys(labels).map(vertexId=>{
+  if(graphData.vertices[vertexId]){
+    graphData.vertices[vertexId]['label'] = labels[vertexId]
+  }
+ })
+ return graphData
+}
+```
 
 ### simpleTestsOnGraph
