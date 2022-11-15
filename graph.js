@@ -1,5 +1,5 @@
 /*** 
-the Graph program. Version 1.2.0 . 
+the Graph program. Version 1.2.1 . 
 Full source code is available at https://github.com/shubhvjain/graphs
 Copyright (C) 2022  Shubh
 
@@ -167,7 +167,10 @@ const generateGraphPreview = async (graphs,options)=>{
     inputGraphs.map((graph,index)=>{
         let vertexInVisFormat = []
         const vertex = Object.keys(graph.vertices)
-        vertex.map(v=>{vertexInVisFormat.push( { id:v , label: graph['vertices'][v]['label']|| v  } )})
+        vertex.map((v,inx)=>{
+          let label = `${options.showVertexCreatedOrder?"("+inx+") ":""}${graph['vertices'][v]['label']|| v}`
+          vertexInVisFormat.push( { id:v , label: label  } )
+          })
         let edgesInVisFormat = []
         graph.edges.map(e=>{
           let newEdge = { from : e.v1, to: e.v2, color: e.temp['color']  }

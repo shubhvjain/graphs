@@ -147,7 +147,10 @@ const generateGraphPreview = async (graphs,options)=>{
     inputGraphs.map((graph,index)=>{
         let vertexInVisFormat = []
         const vertex = Object.keys(graph.vertices)
-        vertex.map(v=>{vertexInVisFormat.push( { id:v , label: graph['vertices'][v]['label']|| v  } )})
+        vertex.map((v,inx)=>{
+          let label = `${options.showVertexCreatedOrder?"("+inx+") ":""}${graph['vertices'][v]['label']|| v}`
+          vertexInVisFormat.push( { id:v , label: label  } )
+          })
         let edgesInVisFormat = []
         graph.edges.map(e=>{
           let newEdge = { from : e.v1, to: e.v2, color: e.temp['color']  }

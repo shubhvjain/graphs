@@ -484,7 +484,7 @@ gs.map(g=>{
   views.push(ts.dfsTree)
   views.push(ts.tsTree)
 })
-let ghtml = await main.generateGraphPreview(views,{format:'htmlParts',outputPath:'./test/graph6.html'})
+let ghtml = await main.generateGraphPreview(views,{format:'html',outputPath:'./test/graph6.html', showVertexCreatedOrder:true})
 ut.print(ghtml,1)
 }
 
