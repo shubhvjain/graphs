@@ -148,7 +148,7 @@ const generateGraphPreview = async (graphs,options)=>{
         let vertexInVisFormat = []
         const vertex = Object.keys(graph.vertices)
         vertex.map((v,inx)=>{
-          let label = `${options.showVertexCreatedOrder?"("+inx+") ":""}${graph['vertices'][v]['label']|| v}`
+          let label = `${options.showVertexCreatedOrder?"("+inx+")     ":""}${graph['vertices'][v]['label']|| v}  `
           vertexInVisFormat.push( { id:v , label: label  } )
           })
         let edgesInVisFormat = []
@@ -157,7 +157,9 @@ const generateGraphPreview = async (graphs,options)=>{
           if(e.label){newEdge['label'] = e['label']}
           edgesInVisFormat.push(newEdge)
         })
-        let visOptions = {}
+        let visOptions = {
+          "nodes":{"shape":"box"}
+        }
         if(graph.metadata.hasDirectedEdges){visOptions['edges'] = { arrows: 'to'}}
         const dataForViz = {nodes : vertexInVisFormat,edges:  edgesInVisFormat,options: visOptions}
         graphHtml += `
